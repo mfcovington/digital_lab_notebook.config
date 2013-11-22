@@ -9,51 +9,11 @@ use warnings;
 use autodie;
 use feature 'say';
 
-#TODO: Read through each file in '/Users/mfc/Dropbox/Notes/' (ignore '_log.Daily.AutoLog.md')
-#TODO: Write log to '/Users/mfc/Dropbox/Notes/_log.Daily.AutoLog.md'
-
 my @file_list = @ARGV;
 my %log;
 
 extract_log($_) for @file_list;
-
-my %month_name = (
-    '01' => 'Jan',
-    '02' => 'Feb',
-    '03' => 'Mar',
-    '04' => 'Apr',
-    '05' => 'May',
-    '06' => 'Jun',
-    '07' => 'Jul',
-    '08' => 'Aug',
-    '09' => 'Sep',
-    '10' => 'Oct',
-    '11' => 'Nov',
-    '12' => 'Dec'
-);
-
-for my $date ( sort { $b <=> $a } keys %log ) {
-
-    my ( $year, $month, $day ) = $date =~ /(\d{4})(\d{2})(\d{2})/;
-
-    say "$month_name{$month}. $day, $year\n";
-    for my $record ( @{$log{$date}} ) {
-
-        my $filename = $$record{filename};
-        my $subject  = $$record{subject};
-        my @keywords = @{ $$record{keywords} };
-
-        $filename =~ s/\s/%20/g;
-
-        for (@keywords) {
-            s/(.*)/**$1**/;
-            tr/a-z/A-Z/;
-        }
-
-        say "- [$subject](file:///Users/mfc/Dropbox/Notes/$filename) @keywords";
-    }
-    say "";
-}
+write_daily_log("/Users/mfc/Dropbox/Notes/daily-log.md");
 
 sub extract_log {
     my $filename = shift;
@@ -71,4 +31,48 @@ sub extract_log {
           { filename => $filename, subject => $subject, keywords => \@keywords };
     }   
     close $log_fh;
+}
+
+sub write_daily_log {
+    my $outfile = shift;
+
+    my %month_name = (
+        '01' => 'Jan',
+        '02' => 'Feb',
+        '03' => 'Mar',
+        '04' => 'Apr',
+        '05' => 'May',
+        '06' => 'Jun',
+        '07' => 'Jul',
+        '08' => 'Aug',
+        '09' => 'Sep',
+        '10' => 'Oct',
+        '11' => 'Nov',
+        '12' => 'Dec'
+    );
+
+    open my $out_fh, ">", $outfile;
+    for my $date ( sort { $b <=> $a } keys %log ) {
+
+        my ( $year, $month, $day ) = $date =~ /(\d{4})(\d{2})(\d{2})/;
+
+        say $out_fh "$month_name{$month}. $day, $year\n";
+        for my $record ( @{$log{$date}} ) {
+
+            my $filename = $$record{filename};
+            my $subject  = $$record{subject};
+            my @keywords = @{ $$record{keywords} };
+
+            $filename =~ s/\s/%20/g;
+
+            for (@keywords) {
+                s/(.*)/**$1**/;
+                tr/a-z/A-Z/;
+            }
+
+            say $out_fh "- [$subject](file:///Users/mfc/Dropbox/Notes/$filename) @keywords";
+        }
+        say $out_fh "";
+    }
+    close $out_fh;
 }
