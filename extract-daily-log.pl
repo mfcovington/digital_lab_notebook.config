@@ -70,7 +70,7 @@ sub write_daily_log {
                 tr/a-z/A-Z/;
             }
 
-            say $out_fh "- [$subject](file:///Users/mfc/Dropbox/Notes/$filename) @keywords";
+            say $out_fh "- [$subject](file://$filename) @keywords";
         }
         say $out_fh "";
     }
