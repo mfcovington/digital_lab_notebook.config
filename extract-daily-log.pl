@@ -23,19 +23,7 @@ sub extract_log {
     open my $log_fh, "<", $filename;
     while (<$log_fh>) {
 
-        if ( /#todo/ ) {
-            my ( $task, $project, $done_date ) = $_ =~
-              /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
-            my @project_tree = split /:/, $project;
-            # $todo{todo}{} =
-
-            if ( defined $done_date ) {
-                to_nested_hash(\%done, @project_tree, $done_date, $task);
-            }
-            else {
-                to_nested_hash(\%todo, @project_tree, $task);
-            }
-        }
+        extract_todo($_) if ( /#todo/ );
 
         next
           unless my ( $subject, $date, $hashtags ) =
@@ -53,6 +41,21 @@ sub extract_log {
 use Data::Printer;
 p %todo;
 p %done;
+
+sub extract_todo {
+    my $line = shift;
+
+    my ( $task, $project, $done_date ) = $line =~
+      /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
+    my @project_tree = split /:/, $project;
+
+    if ( defined $done_date ) {
+        to_nested_hash(\%done, @project_tree, $done_date, $task);
+    }
+    else {
+        to_nested_hash(\%todo, @project_tree, $task);
+    }
+}
 
 sub to_nested_hash {
 
