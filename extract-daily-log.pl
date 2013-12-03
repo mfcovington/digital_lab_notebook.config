@@ -22,14 +22,14 @@ sub extract_log {
     while (<$log_fh>) {
         next
           unless my ( $subject, $date, $hashtags ) =
-          $_ =~ /^\#\s?(.+)\s\#(\d{4}-?\d{2}-?\d{2})(.*)$/g;
+          $_ =~ /^#+\s?(.+)\s#(\d{4}-?\d{2}-?\d{2})(.*)$/;
 
         my @keywords = $hashtags =~ /#([^\s#]+)/g;
         $date =~ s/-//g;
 
         push @{ $log{$date} },
           { filename => $filename, subject => $subject, keywords => \@keywords };
-    }   
+    }
     close $log_fh;
 }
 
