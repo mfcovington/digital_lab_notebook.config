@@ -11,6 +11,8 @@ use feature 'say';
 
 my @file_list = @ARGV;
 my %log;
+my %todo;
+my %done;
 
 extract_log($_) for @file_list;
 write_daily_log("/Users/mfc/Dropbox/Notes/daily-log.md");
@@ -20,6 +22,21 @@ sub extract_log {
 
     open my $log_fh, "<", $filename;
     while (<$log_fh>) {
+
+        if ( /#todo/ ) {
+            my ( $task, $project, $done_date ) = $_ =~
+              /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
+            my @project_tree = split /:/, $project;
+            # $todo{todo}{} =
+
+            if ( defined $done_date ) {
+                to_nested_hash(\%done, @project_tree, $done_date, $task);
+            }
+            else {
+                to_nested_hash(\%todo, @project_tree, $task);
+            }
+        }
+
         next
           unless my ( $subject, $date, $hashtags ) =
           $_ =~ /^#+\s?(.+)\s#(\d{4}-?\d{2}-?\d{2})(.*)$/;
@@ -31,6 +48,22 @@ sub extract_log {
           { filename => $filename, subject => $subject, keywords => \@keywords };
     }
     close $log_fh;
+}
+
+use Data::Printer;
+p %todo;
+p %done;
+
+sub to_nested_hash {
+
+    # Adapted from: http://stackoverflow.com/questions/11505100/ ...
+    # perl-how-to-turn-array-into-nested-hash-keys
+    my $ref   = \shift;
+    my $h     = $$ref;
+    my $value = pop;
+    $ref      = \$$ref->{ $_ } foreach @_;
+    push @{$$ref}, $value;
+    return $h;
 }
 
 sub write_daily_log {
