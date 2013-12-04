@@ -67,28 +67,17 @@ sub extract_log {
 sub extract_todo {
     my $line = shift;
 
-    my ( $task, $project, $done_date ) = $line =~
+    my ( $task, $project_info, $done_date ) = $line =~
       /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
-    my @project_tree = split /:/, $project;
+    my ( $project, $subproject ) = split /:/, $project_info, 2;
+    $subproject //= ".na";
 
     if ( defined $done_date ) {
-        to_nested_hash(\%done, @project_tree, $done_date, $task);
+        push @{$done{$project}{$subproject}{$done_date}}, $task;
     }
     else {
-        to_nested_hash(\%todo, @project_tree, $task);
+        push @{$todo{$project}{$subproject}}, $task;
     }
-}
-
-sub to_nested_hash {
-
-    # Adapted from: http://stackoverflow.com/questions/11505100/ ...
-    # perl-how-to-turn-array-into-nested-hash-keys
-    my $ref   = \shift;
-    my $h     = $$ref;
-    my $value = pop;
-    $ref      = \$$ref->{ $_ } foreach @_;
-    push @{$$ref}, $value;
-    return $h;
 }
 
 sub write_daily_log {
