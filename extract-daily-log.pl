@@ -23,8 +23,9 @@ sub extract_log {
 
     open my $log_fh, "<", $filename;
     while (<$log_fh>) {
+        $filename =~ s/\s/%20/g;
 
-        extract_todo($_) if ( /#todo/ );
+        extract_todo( $_, $filename ) if ( /#todo/ );
 
         next
           unless my ( $subject, $date, $hashtags ) =
@@ -40,7 +41,7 @@ sub extract_log {
 }
 
 sub extract_todo {
-    my $line = shift;
+    my ( $line, $filename ) = @_;
 
     my ( $task, $project_info, $done_date ) = $line =~
       /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
@@ -48,10 +49,10 @@ sub extract_todo {
     $subproject //= ".na";
 
     if ( defined $done_date ) {
-        push @{$done{$project}{$subproject}{$done_date}}, $task;
+        push @{$done{$project}{$subproject}{$done_date}}, [ $task, $filename ];
     }
     else {
-        push @{$todo{$project}{$subproject}}, $task;
+        push @{$todo{$project}{$subproject}}, [ $task, $filename ];
     }
 }
 
@@ -85,8 +86,6 @@ sub write_daily_log {
             my $subject  = $$record{subject};
             my @keywords = @{ $$record{keywords} };
 
-            $filename =~ s/\s/%20/g;
-
             for (@keywords) {
                 s/(.*)/**$1**/;
                 tr/a-z/A-Z/;
@@ -115,7 +114,8 @@ sub write_todo_log {
             my $subheader = format_header($subproject);
 
             say $out_fh "### $subheader\n" unless $subproject eq ".na";
-            say $out_fh "- $_" for @{$todo{$project}{$subproject}};
+            say $out_fh "- [$$_[0]](file://$$_[1])"
+              for @{ $todo{$project}{$subproject} };
             say $out_fh "";
         }
     }
@@ -134,7 +134,8 @@ sub write_todo_log {
 
             for my $done_date ( sort keys $done{$project}{$subproject} ) {
                 say $out_fh "- $done_date";
-                say $out_fh "    - $_" for @{$done{$project}{$subproject}{$done_date}};
+                say $out_fh "    - [$$_[0]](file://$$_[1])"
+                  for @{ $done{$project}{$subproject}{$done_date} };
                 say $out_fh "";
             }
 
