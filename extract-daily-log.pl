@@ -25,7 +25,7 @@ sub extract_log {
     while (<$log_fh>) {
         $filename =~ s/\s/%20/g;
 
-        extract_todo( $_, $filename ) if ( /#todo/ );
+        extract_todo( $_, $filename ) if (/#todo/);
 
         next
           unless my ( $subject, $date, $hashtags ) =
@@ -35,7 +35,11 @@ sub extract_log {
         $date =~ s/-//g;
 
         push @{ $log{$date} },
-          { filename => $filename, subject => $subject, keywords => \@keywords };
+          {
+            filename => $filename,
+            subject  => $subject,
+            keywords => \@keywords
+          };
     }
     close $log_fh;
 }
@@ -43,16 +47,17 @@ sub extract_log {
 sub extract_todo {
     my ( $line, $filename ) = @_;
 
-    my ( $task, $project_info, $done_date ) = $line =~
-      /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
+    my ( $task, $project_info, $done_date ) =
+      $line =~ /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
     my ( $project, $subproject ) = split /:/, $project_info, 2;
     $subproject //= ".na";
 
     if ( defined $done_date ) {
-        push @{$done{$project}{$subproject}{$done_date}}, [ $task, $filename ];
+        push @{ $done{$project}{$subproject}{$done_date} },
+          [ $task, $filename ];
     }
     else {
-        push @{$todo{$project}{$subproject}}, [ $task, $filename ];
+        push @{ $todo{$project}{$subproject} }, [ $task, $filename ];
     }
 }
 
@@ -80,7 +85,7 @@ sub write_daily_log {
         my ( $year, $month, $day ) = $date =~ /(\d{4})(\d{2})(\d{2})/;
 
         say $out_fh "$month_name{$month}. $day, $year\n";
-        for my $record ( @{$log{$date}} ) {
+        for my $record ( @{ $log{$date} } ) {
 
             my $filename = $$record{filename};
             my $subject  = $$record{subject};
