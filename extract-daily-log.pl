@@ -48,8 +48,9 @@ sub extract_todo {
     my ( $line, $filename ) = @_;
 
     my ( $task, $project_info, $done_date ) =
-      $line =~ /^\s*(.+)\s+#todo:?([^\s]+)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
+      $line =~ /^\s*(.+)\s+#todo:?([^\s]*)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
     my ( $project, $subproject ) = split /:/, $project_info, 2;
+    $project ||= ".na";
     $subproject //= ".na";
 
     if ( defined $done_date ) {
@@ -113,7 +114,7 @@ sub write_todo_log {
     for my $project ( sort keys %todo ) {
         my $header = format_header($project);
 
-        say $out_fh "## $header\n";
+        say $out_fh "## $header\n" unless $project eq ".na";
 
         for my $subproject ( sort keys $todo{$project} ) {
             my $subheader = format_header($subproject);
@@ -130,7 +131,7 @@ sub write_todo_log {
     for my $project ( sort keys %done ) {
         my $header = format_header($project);
 
-        say $out_fh "## $header\n";
+        say $out_fh "## $header\n" unless $project eq ".na";
 
         for my $subproject ( sort keys $done{$project} ) {
             my $subheader = format_header($subproject);
