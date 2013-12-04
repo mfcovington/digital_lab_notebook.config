@@ -47,8 +47,8 @@ sub extract_log {
 sub extract_todo {
     my ( $line, $filename ) = @_;
 
-    my ( $task, $project_info, $done_date ) =
-      $line =~ /^\s*(.+)\s+#todo:?([^\s]*)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
+    my ( $task, $project_info, $done_date ) = $line =~
+      /^[\s#]*(.+)\s+#todo:?([^\s]*)(?:.+#done:?(\d{4}-?\d{2}-?\d{2}))?/;
     my ( $project, $subproject ) = split /:/, $project_info, 2;
     $project ||= ".na";
     $subproject //= ".na";
