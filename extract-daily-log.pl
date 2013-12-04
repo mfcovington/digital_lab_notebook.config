@@ -16,7 +16,7 @@ my %done;
 
 extract_log($_) for @file_list;
 write_daily_log("/Users/mfc/Dropbox/Notes/daily-log.md");
-# write_todo_log("/Users/mfc/Dropbox/Notes/todo-log.md");
+write_todo_log("/Users/mfc/Dropbox/Notes/todo-log.md");
 
 sub extract_log {
     my $filename = shift;
@@ -38,31 +38,6 @@ sub extract_log {
     }
     close $log_fh;
 }
-
-# use Data::Printer;
-# p %todo;
-# p %done;
-# {
-#     tomato   {
-#         bil-genotyping   [
-#             [0] "Some SNP positions are likely missing from the .gt-probs files because of insufficient coverage of alt alleles in the BIL population. Therefore, need to re-generate VCF file (and .gt-probs) by also including M82 and PEN",
-#             [1] "Found more examples of genotyped files not being a subset of snp files (suggesting that the files Aashish gave us aren't properly matched). Therefore, I want to re-run SNP detection and genotyping."
-#         ]
-#     }
-# }
-# {
-#     tomato   {
-#         bil-genotyping   {
-#             2013-12-01   [
-#                 [0] "Todo test.",
-#                 [1] "Todo test."
-#             ],
-#             2013-12-03   [
-#                 [0] "Todo test."
-#             ]
-#         }
-#     }
-# }
 
 sub extract_todo {
     my $line = shift;
@@ -122,4 +97,56 @@ sub write_daily_log {
         say $out_fh "";
     }
     close $out_fh;
+}
+
+sub write_todo_log {
+    my $outfile = shift;
+
+    open my $out_fh, ">", $outfile;
+
+    say $out_fh "# TODO LIST\n";
+
+    for my $project ( sort keys %todo ) {
+        my $header = format_header($project);
+
+        say $out_fh "## $header\n";
+
+        for my $subproject ( sort keys $todo{$project} ) {
+            my $subheader = format_header($subproject);
+
+            say $out_fh "### $subheader\n" unless $subproject eq ".na";
+            say $out_fh "- $_" for @{$todo{$project}{$subproject}};
+            say $out_fh "";
+        }
+    }
+
+    say $out_fh "# COMPLETED\n";
+
+    for my $project ( sort keys %done ) {
+        my $header = format_header($project);
+
+        say $out_fh "## $header\n";
+
+        for my $subproject ( sort keys $done{$project} ) {
+            my $subheader = format_header($subproject);
+
+            say $out_fh "### $subheader\n" unless $subproject eq ".na";
+
+            for my $done_date ( sort keys $done{$project}{$subproject} ) {
+                say $out_fh "- $done_date";
+                say $out_fh "    - $_" for @{$done{$project}{$subproject}{$done_date}};
+                say $out_fh "";
+            }
+
+        }
+    }
+
+    close $out_fh;
+}
+
+sub format_header {
+    my $header = shift;
+    $header =~ s/-/ /g;
+    $header =~ tr/a-z/A-Z/;
+    return $header;
 }
